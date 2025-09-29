@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Detail Accessories: {{ accessory.name }}</h3>
+    <p><b>Model:</b> {{ accessory.model_number }}</p>
+    <p><b>Kategori:</b> {{ accessory.category.name }}</p>
+    <p><b>Lokasi:</b> {{ accessory.location.name }}</p>
+
+    <h4 class="mt-4">Daftar Peminjam</h4>
+
+    {% if accessory.users %}
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Checked out to</th>
+                <th>Notes</th>
+                <th>Checkout Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in accessory.users %}
+            <tr>
+                <td>{{ u.Image }}</td>
+                <td>{{ u["Checked out to"] }}</td>
+                <td>{{ u.Notes }}</td>
+                <td>{{ u["Checkout Date"] }}</td>
+                <td>{{ u.Actions }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p><em>Belum ada yang meminjam</em></p>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <table class="table table-bordered">
+            <tr><th>ID:</th><td>{{ accessory.id }}</td></tr>
+            <tr><th>Nama:</th><td>{{ accessory.name }}</td></tr>
+            <tr><th>Kategori:</th><td>{{ accessory.category.name if accessory.category else '-' }}</td></tr>
+            <tr><th>Model:</th><td>{{ accessory.model_number }}</td></tr>
+            <tr><th>Manufacturer:</th><td>{{ accessory.manufacturer.name if accessory.manufacturer else '-' }}</td></tr>
+            <tr><th>Lokasi:</th><td>{{ accessory.location.name if accessory.location else '-' }}</td></tr>
+            <tr><th>Total:</th><td>{{ accessory.qty }}</td></tr>
+            <tr><th>Terpinjam:</th><td>{{ accessory.checkouts_count }}</td></tr>
+            <tr><th>Tersedia:</th><td>{{ accessory.remaining_qty }}</td></tr>
+        </table>
+    </div>
+    
+    <div class="col-md-6">
+        <h3>Peminjam Saat Ini</h3>
+        {% if accessory.users %}
+            <ul class="list-group">
+                {% for user in accessory.users %}
+                    <li class="list-group-item">{{ user }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-info">Belum ada peminjam</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+</body>
+</html>

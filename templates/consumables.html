@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumables</title>
+
+</head>
+<body>
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Daftar Consumables</h2>
+
+<table id="consumablesTable" class="table table-bordered table-hover">
+    <thead class="table-primary">
+        <tr>
+            <th>ID</th>
+            <th>Nama</th>
+            <th>Kategori</th>
+            <th>Manufacturer</th>
+            <th>Lokasi</th>
+            <th>Total</th>
+            <th>Checked Out</th>
+            <th>Available</th>
+            <th>Min Qty</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in consumables %}
+        <tr>
+            <td>{{ c['id'] }}</td>
+            <td>{{ c['name'] }}</td>
+            <td>{{ c['category']['name'] if c['category'] else '-' }}</td>
+            <td>{{ c['manufacturer']['name'] if c['manufacturer'] else '-' }}</td>
+            <td>{{ c['location']['name'] if c['location'] else '-' }}</td>
+            <td>{{ c['qty'] }}</td>
+            <td>{{ c['checkouts_count'] if c['checkouts_count'] else 0 }}</td>
+            <td>{{ c['remaining_qty'] if c['remaining_qty'] else c['qty'] }}</td>
+            <td>
+                {% if c['min_qty'] %}
+                    {% if c['remaining_qty'] <= c['min_qty'] %}
+                        <span class="badge bg-danger">{{ c['min_qty'] }}</span>
+                    {% else %}
+                        <span class="badge bg-success">{{ c['min_qty'] }}</span>
+                    {% endif %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('#consumablesTable').DataTable({
+            "order": [[0, "asc"]],
+            "pageLength": 10,
+            "language": {
+                "search": "Cari:",
+                "lengthMenu": "Tampilkan _MENU_ data",
+                "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                "paginate": {
+                    "previous": "Sebelumnya",
+                    "next": "Berikutnya"
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+</body>
+</html>

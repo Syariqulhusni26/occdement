@@ -1,0 +1,228 @@
+# 📘 Project Best Practices
+
+## 1. Project Purpose
+A Flask-based web application for device and inventory management. It integrates:
+- MikroTik RouterOS for network device visibility (ARP table) and firewall control (address lists and filter rules).
+- Snipe-IT API for listing and managing accessories and their borrowers.
+- Simple authentication and session gating using a SQLite-backed users table.
+
+Primary use cases:
+- View ARP-detected devices and toggle their network access by adding/removing them from MikroTik firewall lists.
+- View Snipe-IT accessories, including borrower details.
+- Manage firewall address lists (BLOCKED/ALLOWED) with synchronized firewall filter rules.
+
+## 2. Project Structure
+- app.py — Main Flask app and routes. Handles login, Snipe-IT integration, MikroTik API calls, and UI pages.
+- services/
+  - mikrotik_service.py — Alternative MikroTik connector using librouteros (not currently used by app.py which uses routeros_api).
+  - config.py — Placeholder (empty).
+- templates/
+  - base.html — Shared layout with sidebar and Bootstrap.
+  - index.html — ARP devices view and API network check.
+  - firewall_address.html — Firewall address list management.
+  - accessories.html — Snipe-IT accessories with borrower modal.
+  - consumables.html — Snipe-IT consumables listing.
+  - login.html — Login page.
+  - add.html, dashboard.html, accessories_detail.html — Misc. templates (some may be unused).
+- static/
+  - style.css — Currently empty; prefer custom styles here.
+- database.py — One-time script to initialize database.db with users table and default admin user.
+- create_user.py — Adds a user to users.db with an extra column fullname (note: schema mismatch versus database.py).
+- database.db — Local SQLite database (should not be committed in production).
+- venv/ — Local virtual environment (should not be committed).
+
+Entry points and configuration:
+- Entry point: app.py (runs Flask on 0.0.0.0:5000 with debug=True).
+- Session secret key and Snipe-IT token are hard-coded in app.py (move to environment variables).
+- BackgroundScheduler is started but not used for any scheduled jobs (remove or implement tasks).
+
+Separation of concerns:
+- HTTP/UI (Flask) and services are colocated. MikroTik logic is mixed inside routes; prefer extracting into a dedicated service layer (services/) and unifying client usage.
+
+## 3. Test Strategy
+Current status: No tests found.
+
+Recommended approach:
+- Framework: pytest + pytest-flask.
+- Structure:
+  - tests/
+    - test_app.py — Flask route tests with the Flask test client.
+    - test_snipeit.py — Snipe-IT integration tests with mocked requests.
+    - test_mikrotik.py — MikroTik service tests with mocked routeros_api/librouteros.
+    - conftest.py — App and client fixtures, environment fixtures.
+- Naming: test_*.py files; functions test_*.
+- Mocking:
+  - requests to Snipe-IT using requests-mock or monkeypatch.
+  - routeros_api/librouteros calls using monkeypatch or a thin service abstraction to inject a fake client.
+  - SQLite: use a temporary database (e.g., tmp_path) or in-memory DB for tests.
+- Philosophy:
+  - Unit tests for service logic (MikroTik address-list manipulation, Snipe-IT data parsing).
+  - Integration tests for Flask routes (authentication, rendering, status codes).
+  - Avoid network calls in tests; simulate MikroTik and Snipe-IT responses.
+- Coverage:
+  - Aim >= 80% statements/branches on core service logic and route handlers.
+  - Add regression tests on toggling logic (BLOCKED/ALLOWED + filter rules sync).
+
+## 4. Code Style
+Python/Flask conventions:
+- Use snake_case for variables, functions; PascalCase for classes.
+- Add type hints (e.g., def extract_id(entry: dict) -> str | None:).
+- Keep templates small, use macros/partials when markup repeats.
+- Avoid logic-heavy templates; move logic to Python where practical.
+
+Config and secrets:
+- Do not hard-code secrets (Flask secret key, Snipe-IT token, MikroTik credentials).
+- Load from environment variables and/or a config class (e.g., app.config from a Config object).
+- Consider python-dotenv for local development.
+
+Error handling:
+- Wrap external calls (Snipe-IT, MikroTik) in try/except with clear user-facing messages and server logs.
+- Standardize logging via app.logger for all exceptions (avoid print in production).
+- For JSON endpoints, return structured errors with appropriate HTTP status codes.
+
+Naming and routes:
+- Keep route names and endpoint names consistent and descriptive (e.g., /address/add -> /addresses for RESTful patterns).
+- Maintain consistent language usage (currently Indonesian for UI messages; keep consistent across new routes).
+
+HTML/CSS:
+- Extend base.html; render content in block content.
+- Use Bootstrap for layout; place custom styles in static/style.css.
+- Keep inline styles minimal; move to static/style.css.
+
+Security:
+- Use Flask session securely; set SECRET_KEY from env.
+- Do not run debug=True in production.
+- Add CSRF protection for forms (Flask-WTF or custom CSRF token strategy).
+- Validate/sanitize user inputs (e.g., IP addresses) before using in MikroTik calls.
+
+## 5. Common Patterns
+- Authentication and gating:
+  - login_required decorator using session["user_id"].
+- External services:
+  - Snipe-IT via REST using requests with Bearer token.
+  - MikroTik:
+    - Address list management with toggling between BLOCKED and ALLOWED.
+    - Synchronize corresponding firewall filter rules (add drop when BLOCKED, remove when ALLOWED).
+    - IDs may be present as ".id" or "id"; helper extract_id accounts for variance.
+- UI patterns:
+  - Flash messages for success/error feedback.
+  - DataTables for interactive tables on accessories.html.
+  - Bootstrap styling, modal for borrower details.
+- Network filtering:
+  - ARP devices filtered by IP prefix (e.g., "192.168.55."); make configurable.
+
+## 6. Do's and Don'ts
+- ✅ Do
+  - Store all secrets and tokens in environment variables:
+    - FLASK_SECRET_KEY, SNIPEIT_URL, SNIPEIT_TOKEN, MT_HOST, MT_USER, MT_PASS, DB_PATH.
+  - Centralize MikroTik and Snipe-IT logic into service modules; keep routes thin.
+  - Validate IPs with a strict IPv4 validator before writing to address lists.
+  - Handle RouterOS IDs consistently; prefer using .id when available.
+  - Implement CSRF protection on all POST forms.
+  - Add robust error handling and logging around external API calls.
+  - Add tests for toggle flows: BLOCKED → ALLOWED and ALLOWED → BLOCKED, including filter rules sync.
+
+- ❌ Don’t
+  - Don’t commit database.db, tokens, or secrets into version control.
+  - Don’t mix different MikroTik client libraries without a clear abstraction (routeros_api vs librouteros); pick one and standardize.
+  - Don’t hard-code network prefixes or device IDs; parameterize via config.
+  - Don’t keep unused schedulers or dead code; remove BackgroundScheduler unless used.
+  - Don’t return raw exceptions to clients; sanitize error messages in responses.
+
+## 7. Tools & Dependencies
+Key libraries:
+- Flask — Web framework.
+- requests — HTTP calls to Snipe-IT API.
+- routeros_api or librouteros — MikroTik RouterOS API client (standardize on one).
+- APScheduler — Background jobs (currently not used).
+- Werkzeug.security — Password hashing.
+- sqlite3 — Local DB for users.
+
+Recommended setup:
+- Create a virtual environment and install dependencies.
+- Create a .env (for local dev) with required variables.
+- Initialize the database schema via database.py (or a proper migration tool like Flask-Migrate in the future).
+
+Suggested requirements.txt (align with actual code usage):
+- Flask
+- requests
+- routeros-api (if using routeros_api)
+- librouteros (if standardizing on this, remove routeros-api)
+- APScheduler
+- python-dotenv
+- Werkzeug
+- pytest
+- pytest-flask
+- requests-mock (optional)
+
+Environment variables (example):
+- FLASK_SECRET_KEY=...
+- SNIPEIT_URL=http://<host>:<port>/api/v1
+- SNIPEIT_TOKEN=...
+- MT_HOST=192.168.55.1
+- MT_USER=admin
+- MT_PASS=...
+- DB_PATH=database.db
+- IP_PREFIX=192.168.55.
+
+Run:
+- set env vars, then: python app.py
+- Production: use a WSGI server (e.g., gunicorn) and proper reverse proxy/HTTPS.
+
+## 8. Other Notes
+- RouterOS ID fields can be ".id" or "id" and may have special formats (e.g., leading "*"). Code accounts for both; preserve this behavior when adding features.
+- Snipe-IT responses commonly wrap actual data in rows; handle missing fields defensively.
+- create_user.py uses users.db and a fullname column that does not exist in database.py schema. Standardize on a single DB path and schema to avoid confusion.
+- Be mindful of mixed Bahasa Indonesia/English naming and messaging; keep consistent for user-facing UI and code readability.
+- When adding new features:
+  - Extend service modules rather than embedding logic in routes.
+  - Add tests first for external integration paths with mocked clients.
+  - Keep templates DRY using Jinja includes/macros for repeated table rows or forms.
+
+Tambahan fitur
+1. Melihat siapa siapa saja yang pinjam barang di Accesories (Utama untuk Disable jaringan) dan Consumables {Ini masih belum siap ya, lanjut besok}
+
+kalau Untuk
+2. Membuat halaman Dashboard isinya data data consumables, manajemen perangkat, accesories dan User (Ini belum buat loginnya)
+
+ini kita harus buat DHCP Leases berdasarkan MAC address perangkat yang mau di pinjamkan, supaya ip perangkat tersebut bisa kita manipulasi jaringannya
+
+📌 Data yang wajib ada di perangkat
+
+Nama Perangkat → biar gampang dicocokkan sama di SnipeIT.
+
+MAC Address → ini yang jadi kunci utama DHCP di Mikrotik, wajib didata.
+
+Tipe perangkat (HHT, Laptop, HP, dll) → supaya bisa kita atur aturan IP pool yang berbeda kalau perlu.
+
+Lokasi / divisi pengguna (opsional tapi bagus) → misalnya IP pool per-departemen.
+
+Custom Field di SnipeIT → untuk menyimpan MAC address (atau IP statis kalau sudah fixed).
+
+PR : 
+(Penting)
+1. Perbaiki warna tombol disable enable address list, Memperbaiki logika disable enable supaya tidak membuat salinan address list baru (V), Menambahkan Dropdown dan memisahkan file dari indeks (Belum Masuk Laporan)
+
+24/09/25
+2. Membuat Halaman Dashboard untuk menampilkan data data history di sana
+3. Selanjutnya memunculkan menu user di sistem
+
+
+
+(Opsional)
+2. Penjadwalan Internet di sinkronkan
+3. Buat fitur User di side bar, bisa mengatur dan melihat user user yang bisa login
+
+Progres Project Sistem
+
+25/09/25
+1. Halaman dashboard sudah bisa V
+2. Menu User sudah bisa digunakan V
+3. Tinggal buat login mikrotik dan menambahkan menu login mikrotik dari dalam sistem V
+4. Tinggal menyelesaikan history device enable disable dab kayaknya buat file log untuk itu V
+5  tinggal membuat data user yang belum di update di halaman home X
+6. Tinggal integrasi ke LocalTunnnel X
+
+26/09/25
+1. 
+

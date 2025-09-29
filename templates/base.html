@@ -1,0 +1,526 @@
+    <!doctype html>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aplikasi Inventaris</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+
+    <style>
+    /* Reset margin/padding */
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f8f9fa;
+    }
+
+    /* Sidebar styling */
+    .sidebar {
+        min-height: 100vh;
+        width: 260px;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        box-shadow: 3px 0 15px rgba(0, 0, 0, 0.2);
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        color: #e0e6f1;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1030;
+    }
+
+    .sidebar.collapsed {
+        width: 70px;
+    }
+
+    /* Sidebar header */
+    .sidebar-header {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        user-select: none;
+    }
+
+    .sidebar-header h5 {
+        font-weight: 700;
+        font-size: 1.3rem;
+        color: #f0f4ff;
+        white-space: nowrap;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .sidebar.collapsed .sidebar-header h5 {
+        opacity: 0;
+        transform: translateX(-20px);
+        pointer-events: none;
+    }
+    /* Hide logo when collapsed */
+    .sidebar.collapsed .sidebar-header .brand-logo {
+        display: none;
+    }
+
+    /* Toggle button */
+    #toggleBtn {
+        background: transparent;
+        border: none;
+        color: #1e3983ff;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+    }
+
+    #toggleBtn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: rotate(180deg);
+    }
+
+    /* Nav list */
+    .nav {
+        flex-grow: 1;
+        padding-top: 1rem;
+        overflow-y: auto;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        color: #cbd5f7;
+        font-weight: 600;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        white-space: nowrap;
+        user-select: none;
+    }
+
+    .nav-link i {
+        font-size: 1.3rem;
+        width: 30px;
+        text-align: center;
+        color: #a3bffa;
+        transition: color 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .nav-link span {
+        margin-left: 12px;
+        opacity: 1;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        display: inline-block;
+    }
+
+    /* Dropdown styling untuk sidebar */
+    .nav-link.dropdown-toggle {
+        position: relative;
+    }
+
+    .nav-link.dropdown-toggle::after {
+        content: '\f078'; /* Icon panah bawah dari Font Awesome */
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        margin-left: auto;
+        transition: transform 0.3s ease;
+        color: #a3bffa;
+    }
+
+    .nav-link.dropdown-toggle[aria-expanded="true"]::after {
+        transform: rotate(180deg);
+    }
+
+    .dropdown-menu {
+        min-width: 220px;
+        border-radius: 8px;
+        margin-top: 0.25rem;
+        z-index: 1050; /* Pastikan di atas elemen lain */
+        background: linear-gradient(135deg, #1e3c72, #2a5298); /* Fallback gradient untuk konsistensi */
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .dropdown-item {
+        transition: background-color 0.3s ease, color 0.3s ease;
+        border-radius: 6px;
+        margin: 0.125rem 0;
+        color: #e0e6f1;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        color: #f0f4ff !important;
+    }
+
+    .dropdown-item i {
+        color: #ffd43b;
+        width: 16px;
+        margin-right: 0.5rem;
+    }
+
+    /* Hide dropdown saat sidebar collapsed */
+    .sidebar.collapsed .dropdown-menu {
+        display: none !important;
+    }
+
+    .sidebar.collapsed .nav-link span {
+        opacity: 0;
+        transform: translateX(-15px);
+        pointer-events: none;
+        display: none;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: #f0f4ff;
+    }
+
+    .nav-link:hover i,
+    .nav-link.active i {
+        color: #ffd43b;
+    }
+
+    /* Scrollbar for sidebar nav */
+    .nav::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .nav::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
+    }
+
+    /* Main content */
+    .main-content {
+        margin-left: 260px;
+        padding: 1.5rem 2rem;
+        min-height: 100vh;
+        background: #f8f9fa;
+        transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar.collapsed + .main-content {
+        margin-left: 70px;
+    }
+
+    /* Navbar inside main content */
+    .brand-logo {
+        height: 36px;
+        width: auto;
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 2px;
+    }
+    .sidebar-header .brand-logo { margin-bottom: .5rem; }
+
+    .navbar {
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .navbar-brand {
+        font-weight: 700;
+        font-size: 1.4rem;
+        color: #2a5298;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: #2a5298;
+        border: none;
+        font-weight: 600;
+        box-shadow: 0 4px 8px rgba(42, 82, 152, 0.3);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: #1e3c72;
+        box-shadow: 0 6px 12px rgba(30, 60, 114, 0.5);
+    }
+
+    /* Alerts */
+    .alert {
+        border-radius: 10px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Responsive adjustments - Gabungan dan dimodifikasi untuk dropdown rapat */
+    @media (max-width: 991.98px) {
+        .sidebar {
+            position: fixed;
+            z-index: 1040;
+            height: 100%;
+            left: -260px;
+            transition: left 0.3s ease;
+        }
+
+        .sidebar.show {
+            left: 0;
+        }
+
+        .sidebar.collapsed {
+            left: -70px;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            padding: 1rem;
+        }
+
+        /* Modifikasi dropdown untuk rapat tanpa space di mobile/tablet */
+        .dropdown-menu {
+            position: static !important;
+            float: none;
+            width: auto;
+            margin: 0 !important; /* Hilangkan semua margin untuk rapat */
+            padding: 0 !important; /* Hilangkan padding atas/bawah */
+            background: linear-gradient(135deg, #1e3c72, #2a5298) !important; /* Pertahankan gradient, jangan transparent */
+            border: none !important;
+            box-shadow: none !important; /* Hilangkan shadow untuk seamless */
+            border-radius: 0 !important; /* Hilangkan radius agar rapat dengan parent */
+            z-index: auto; /* Tidak perlu z-index tinggi di static */
+        }
+        
+        .dropdown-item {
+            padding: 0.5rem 1.5rem !important; /* Padding sama seperti nav-link utama, tanpa indent berlebih */
+            margin: 0 !important; /* Hilangkan margin antar item */
+            border-radius: 0 !important; /* Hilangkan radius untuk rapat */
+            color: #e0e6f1 !important;
+            font-weight: 600;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dropdown-item:first-child {
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px; /* Radius hanya di atas untuk koneksi smooth */
+        }
+
+        .dropdown-item:last-child {
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px; /* Radius hanya di bawah */
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+            color: #f0f4ff !important;
+        }
+
+        .dropdown-item i {
+            color: #ffd43b;
+            width: 16px;
+            margin-right: 0.5rem; /* Gunakan margin-right alih-alih me-2 untuk konsistensi */
+        }
+
+        /* Pastikan nav-link dropdown-toggle tidak punya extra space di mobile */
+        .nav-link.dropdown-toggle {
+            border-radius: 8px 8px 0 0 !important; /* Radius atas penuh, bawah 0 untuk rapat dengan submenu */
+        }
+    }
+    </style>
+
+    </head>
+    <body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        {% if session.get('username') %}
+        <nav class="sidebar" id="sidebar" aria-label="Sidebar Navigation">
+        <!-- Header sidebar dengan tombol toggle -->
+        <div class="sidebar-header d-flex flex-column align-items-center text-center">
+            <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo" class="brand-logo mb-2">
+            <h5 class="mb-0">Inventaris App</h5>
+        </div>
+
+        <ul class="nav flex-column">
+            <li class="nav-item mb-2">
+            <a class="nav-link active" href="{{ url_for('home') }}">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            </li>
+            <li class="nav-item mb-2">
+            <a class="nav-link" href="{{ url_for('consumables') }}">
+                <i class="fas fa-boxes"></i>
+                <span>Consumables</span>
+            </a>
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('accessories') }}">
+                    <i class="fas fa-headphones"></i>
+                    <span>Accessories</span>
+                </a>
+            </li>
+            {% if session.get('role') == 'admin' %}
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('users_page') }}">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Users</span>
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('mikrotik_login') }}">
+                    <i class="fas fa-server"></i>
+                    <span>Login MikroTik</span>
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link" href="{{ url_for('snipeit_login') }}">
+                    <i class="fas fa-key"></i>
+                    <span>Login Snipe-IT</span>
+                </a>
+                </li>
+
+            <li class="nav-item mb-2">
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-laptop"></i>
+                        <span>Manajemen Perangkat</span>
+                    </a>
+                    <ul class="dropdown-menu" style="background: linear-gradient(135deg, #1e3c72, #2a5298); border: none; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);">
+                        <li><a class="dropdown-item" href="{{ url_for('index')}}" style="color: #e0e6f1; padding: 0.5rem 1rem; font-weight: 600;">
+                            <i class="fas fa-network-wired me-2"></i>Perangkat ARP Terdeteksi
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('firewall_address')}}" style="color: #e0e6f1; padding: 0.5rem 1rem; font-weight: 600;">
+                            <i class="fas fa-shield-alt me-2"></i>Firewall Address List
+                        </a></li>
+                    </ul>
+                </div>
+            </li>
+            
+        </ul>
+        </nav>
+        
+        
+        <!-- Main Content -->
+        <main class="main-content flex-grow-1" role="main">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <button class="btn" id="toggleBtn" aria-label="Toggle Sidebar">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div class="container-fluid px-0 d-flex justify-content-between align-items-center">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                    {% if title not in ['Dashboard', 'Consumables', 'Accessories', 'Perangkat ARP Terdeteksi', 'Firewall Address List'] %}
+                    {% endif %}
+                    <span>{{ title }}</span>
+                </a>
+
+                {% if session.get('username') %}
+                <div class="d-flex align-items-center">
+                    <span class="me-3">Halo, {{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary btn-sm">Logout</a>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+        <div class="container-fluid px-0">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+        
+        </main>
+    </div>
+
+    <script >
+const sidebar = document.getElementById('sidebar');
+const toggleBtn = document.getElementById('toggleBtn');
+const icon = toggleBtn.querySelector('i');
+
+toggleBtn.addEventListener('click', () => {
+    // Untuk layar besar → collapse sidebar
+    if (window.innerWidth > 991.98) {
+        sidebar.classList.toggle('collapsed');
+        if (sidebar.classList.contains('collapsed')) {
+            icon.classList.replace('fa-chevron-left', 'fa-chevron-right');
+        } else {
+            icon.classList.replace('fa-chevron-right', 'fa-chevron-left');
+        }
+    } else {
+        // Untuk layar kecil → slide in/out
+        sidebar.classList.toggle('show');
+        if (sidebar.classList.contains('show')) {
+            icon.classList.replace('fa-chevron-right', 'fa-chevron-left');
+        } else {
+            icon.classList.replace('fa-chevron-left', 'fa-chevron-right');
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle sidebar toggle di mobile (asumsi ada tombol hamburger di navbar)
+    const sidebar = document.getElementById('sidebar');
+    // Jika ada tombol show/hide sidebar di mobile, tambahkan event
+    // Contoh: document.querySelector('.navbar-toggler').addEventListener('click', () => {
+    //     sidebar.classList.toggle('show');
+    //     // Tutup dropdown jika sidebar hide
+    //     const dropdowns = document.querySelectorAll('.dropdown-menu.show');
+    //     dropdowns.forEach(dd => {
+    //         const toggle = dd.previousElementSibling;
+    //         const bsDropdown = new bootstrap.Dropdown(toggle);
+    //         bsDropdown.hide();
+    //     });
+    // });
+    // Auto-tutup dropdown saat resize ke desktop (opsional)
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 991.98) {
+            const dropdowns = document.querySelectorAll('.dropdown-menu.show');
+            dropdowns.forEach(dd => dd.classList.remove('show'));
+        }
+    });
+});
+
+// Tutup sidebar di layar kecil saat klik di luar
+document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 991.98) {
+        if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+            sidebar.classList.remove('show');
+            icon.classList.replace('fa-chevron-left', 'fa-chevron-right');
+        }
+    }
+});
+
+// Reset ikon sesuai kondisi saat resize
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 991.98) {
+        sidebar.classList.remove('show'); // matikan mode mobile
+        icon.classList.replace('fa-chevron-right', 'fa-chevron-left');
+    } else {
+        sidebar.classList.remove('collapsed'); // matikan mode desktop
+        icon.classList.replace('fa-chevron-left', 'fa-chevron-right');
+    }
+});
+</script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+    </script>
+    </body>
+    </html>

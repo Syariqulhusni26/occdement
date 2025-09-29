@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    /* Override guest background to match the provided purple–indigo gradient image */
+    body.guest {
+        min-height: 100vh;
+        background:
+        radial-gradient(700px 520px at 20% 25%, rgba(32, 50, 130, 0.70), rgba(235, 26, 26, 0.15) 60%),
+        radial-gradient(600px 500px at 85% 70%, rgba(157, 198, 119, 0.5), transparent 60%),
+        linear-gradient(135deg, #c9c2ff 0%, #b7baf9 40%, #8f95cf 100%);
+    }
+
+    /* Layout center for login */
+    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+
+    /* Avatar bubble above card */
+    .avatar-bubble {
+        width: 84px; height: 84px; border-radius: 50%;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 14px 28px rgba(30, 60, 114, 0.35);
+        margin: 0 auto -42px; position: relative; z-index: 2;
+    }
+    .avatar-bubble img { height: 46px; width: 46px; object-fit: contain; background: #ffffff; border-radius: 8px; padding: 4px; }
+
+    /* Glass-like login card using system palette */
+    .glass-card { 
+        background: linear-gradient(160deg, rgba(30,60,114,0.95) 0%, rgba(42,82,152,0.92) 50%, rgba(59,107,196,0.9) 100%);
+        border-radius: 14px; color: #e9efff; border: 1px solid rgba(255,255,255,0.06);
+        box-shadow: 0 18px 32px rgba(30,60,114,0.35);
+        backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        overflow: hidden;
+    }
+    .glass-card .card-body { padding: 2rem 1.5rem; }
+    @media (min-width: 768px) { .glass-card .card-body { padding: 2.25rem 2rem; } }
+
+    /* Inputs and icons */
+    .glass-card .input-group-text { background: rgba(255,255,255,0.10); border-right: 0; color: #e0e6f1; font-weight: 600; }
+    .glass-card .form-control { background: rgba(255,255,255,0.14); color: #f8f9fa; border-left: 0; border-color: rgba(255,255,255,0.2); }
+    .glass-card .form-control::placeholder { color: #dbe4ff; opacity: .8; }
+    .glass-card .form-control:focus { box-shadow: 0 0 0 .2rem rgba(42, 82, 152, .25); border-color: #ffd43b; }
+
+    .glass-card .login-title { color: #f0f4ff; font-weight: 700; letter-spacing: .3px; }
+    .login-meta { color: #cbd5f7; font-size: .85rem; }
+    </style>
+
+    <div class="login-wrap">
+    <div class="col-12" style="max-width: 460px;">
+        <div class="avatar-bubble">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo">
+        </div>
+        <div class="card shadow-lg glass-card mt-0">
+        <div class="card-body">
+            <h4 class="text-center mb-4 login-title">Login</h4>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                <div class="alert alert-{{ category }}">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input type="text" name="username" id="username" class="form-control border-start-0" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" name="password" id="password" class="form-control border-start-0" required>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3 login-meta">
+                <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="remember">
+                <label class="form-check-label" for="remember">Remember me</label>
+                </div>
+                <a href="#" class="text-decoration-none" style="color:#a3bffa;">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+            </form>
+            <div class="text-center mt-3 login-meta">
+                Belum punya akun? <a href="{{ url_for('signup') }}" class="text-decoration-none" style="color:#a3bffa;">Buat akun</a>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

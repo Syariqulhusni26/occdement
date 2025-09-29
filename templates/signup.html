@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    /* Gunakan latar guest (login) yang sudah ada; fokus ke kartu */
+    .signup-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+
+    .avatar-bubble {
+        width: 84px; height: 84px; border-radius: 50%;
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 14px 28px rgba(30, 60, 114, 0.35);
+        margin: 0 auto -42px; position: relative; z-index: 2;
+    }
+    .avatar-bubble img { height: 46px; width: 46px; object-fit: contain; background: #ffffff; border-radius: 8px; padding: 4px; }
+
+    .glass-card {
+        background: linear-gradient(160deg, rgba(30,60,114,0.95) 0%, rgba(42,82,152,0.92) 50%, rgba(59,107,196,0.9) 100%);
+        border-radius: 14px; color: #e9efff; border: 1px solid rgba(255,255,255,0.06);
+        box-shadow: 0 18px 32px rgba(30,60,114,0.35);
+        backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        overflow: hidden;
+    }
+    .glass-card .card-body { padding: 2rem 1.5rem; }
+    @media (min-width: 768px) { .glass-card .card-body { padding: 2.25rem 2rem; } }
+
+    .glass-card .input-group-text { background: rgba(255,255,255,0.10); border-right: 0; color: #e0e6f1; font-weight: 600; }
+    .glass-card .form-control { background: rgba(255,255,255,0.14); color: #f8f9fa; border-left: 0; border-color: rgba(255,255,255,0.2); }
+    .glass-card .form-control::placeholder { color: #dbe4ff; opacity: .85; }
+    .glass-card .form-control:focus { box-shadow: 0 0 0 .2rem rgba(42, 82, 152, .25); border-color: #ffd43b; }
+
+    .login-meta { color: #cbd5f7; font-size: .85rem; }
+    </style>
+
+    <div class="signup-wrap">
+    <div class="col-12" style="max-width: 480px;">
+        <div class="avatar-bubble">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="Logo">
+        </div>
+
+        <div class="card shadow-lg glass-card mt-0">
+        <div class="card-body">
+            <h4 class="text-center mb-4" style="color:#f0f4ff; font-weight:700; letter-spacing:.3px;">Buat Akun</h4>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, msg in messages %}
+                <div class="alert alert-{{ category }}">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('signup') }}" onsubmit="return validateSignup(event)">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                <input type="text" name="username" id="username" class="form-control border-start-0" placeholder="nama pengguna" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" name="password" id="password" class="form-control border-start-0" placeholder="min. 6 karakter" minlength="6" required>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="confirm" class="form-label">Konfirmasi Password</label>
+                <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                <input type="password" id="confirm" class="form-control border-start-0" placeholder="ulangi password" minlength="6" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Daftar</button>
+            </form>
+
+            <div class="text-center mt-3 login-meta">
+            Sudah punya akun? <a href="{{ url_for('login') }}" class="text-decoration-none" style="color:#a3bffa;">Login</a>
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+    function validateSignup(e){
+    const p = document.getElementById('password');
+    const c = document.getElementById('confirm');
+    if(p.value !== c.value){
+        e.preventDefault();
+        alert('Konfirmasi password tidak cocok');
+        c.focus();
+        return false;
+    }
+    return true;
+}
+</script>
+
+{% endblock %}

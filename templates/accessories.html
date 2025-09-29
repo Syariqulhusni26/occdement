@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessories | Snipeit</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+</head>
+<body>
+{% extends "base.html" %}
+{% block content %}
+<h2>Daftar Accessories</h2>
+<table id="myTable" class="table table-striped table-bordered">
+    <thead class="table-primary">
+        <tr>
+            <th>ID</th>
+            <th>Nama</th>
+            <th>Kategori</th>
+            <th>Model</th>
+            <th>Manufacturer</th>
+            <th>Lokasi</th>
+            <th>Total</th>
+            <th>Checked Out</th>
+            <th>Available</th>
+            <th>Aksi</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for acc in accessories %}
+        <tr>
+            <td>{{ acc['id'] }}</td>
+            <td>{{ acc['name'] }}</td>
+            <td>{{ acc['category']['name'] if acc['category'] else '-' }}</td>
+            <td>{{ acc['model_number'] }}</td>
+            <td>{{ acc['manufacturer']['name'] if acc['manufacturer'] else '-' }}</td>
+            <td>{{ acc['location']['name'] if acc['location'] else '-' }}</td>
+            <td>{{ acc['qty'] }}</td>
+            <td>{{ acc['checkouts_count'] }}</td>
+            <td>{{ acc['remaining_qty'] }}</td>
+            <td>
+                <!-- Tombol untuk lihat peminjam -->
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modal{{ acc['id'] }}">
+                    Lihat Peminjam
+                </button>
+            </td>
+        </tr>
+
+        <!-- Modal untuk peminjam -->
+        <div class="modal fade" id="modal{{ acc['id'] }}" tabindex="-1" aria-labelledby="modalLabel{{ acc['id'] }}" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel{{ acc['id'] }}">Peminjam - {{ acc['name'] }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {% if acc['borrowers'] %}
+                            <ul class="list-group">
+                                {% for borrower in acc['borrowers'] %}
+                                <li class="list-group-item d-flex align-items-center">
+                                    <div>
+                                        <strong>{{ borrower['assigned_to']['name'] }}</strong><br>
+                                        <small>{{ borrower['created_at']['formatted'] }}</small><br>
+                                        <em>{{ borrower['note'] if borrower['note'] else '' }}</em>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">Belum ada peminjam untuk accessory ini.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#myTable').DataTable({
+        "paging": true,
+        "ordering": true,
+        "searching": true,
+        "info": true,
+        "columnDefs": [
+            { "orderable": true, "targets": "_all" }
+        ]
+    });
+});
+</script>
+</body>
+</html>

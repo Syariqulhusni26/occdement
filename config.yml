@@ -1,0 +1,7 @@
+tunnel: uni-tunnel
+credentials-file: C:\Users\M\.cloudflared\bfa5c20a-e3d6-4043-aa70-f252e8b0c438.json
+
+ingress:
+  - hostname: app.occdement.my.id
+    service: http://localhost:5000
+  - service: http_status:404

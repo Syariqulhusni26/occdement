@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Login Snipe-IT</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label class="form-label">Snipe-IT URL</label>
+      <input type="text" class="form-control" name="url" placeholder="http://192.168.5.33:8083/api/v1" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">API Token</label>
+      <input type="text" class="form-control" name="token" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Login</button>
+  </form>
+</div>
+{% endblock %}

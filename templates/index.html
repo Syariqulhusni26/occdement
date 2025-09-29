@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set arp_enabled = (arp_devices | selectattr('enabled') | list | length) %}
+{% set arp_total = arp_devices | length %}
+{% set arp_disabled = arp_total - arp_enabled %}
+
+{% set ns = namespace(allowed=0, blocked=0) %}
+{% for e in address_list %}
+    {% if e.list and (e.list | upper) == 'ALLOWED' %}
+        {% set ns.allowed = ns.allowed + 1 %}
+    {% elif e.list and (e.list | upper) == 'BLOCKED' %}
+        {% set ns.blocked = ns.blocked + 1 %}
+    {% endif %}
+{% endfor %}
+
+<style>
+  /* Icon bubble and card polish */
+  .icon-bubble {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #ffd43b; /* accent used in base */
+    box-shadow: 0 6px 12px rgba(42, 82, 152, 0.25);
+    flex: 0 0 46px;
+  }
+  .card:hover .icon-bubble { transform: translateY(-2px); filter: brightness(1.05); }
+  .card { border: none; }
+  .card .label { font-size: .875rem; color: #6c757d; }
+  .metric { font-weight: 700; font-size: 1.1rem; }
+  .sub { font-size: .8rem; color: #6c757d; }
+
+  /* Medium doughnut sizing */
+  .chart-wrap { position: relative; height: 240px; }
+  @media (max-width: 575.98px) { .chart-wrap { height: 220px; } }
+</style>
+
+<div class="container-fluid px-0">
+    <!-- Ringkasan (Cards) -->
+    <div class="row g-3 mb-3">
+        <!-- Users (placeholder + current user) -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <a href="{{ url_for('users_page') }}"><div class="icon-bubble"><i class="fa fa-users"></i></div></a>
+                    <div class="ms-3 text-end">
+                        <div class="label">Users</div>
+                        <div id="card-users" class="metric">—</div>
+                        {% if session.get('username') %}
+                            <div class="sub">Login: {{ session.username }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Consumables -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <a href="{{ url_for('consumables') }}"><div class="icon-bubble"><i class="fa fa-boxes"></i></div></a>
+                    <div class="ms-3 text-end">
+                        <div class="label">Consumables</div>
+                        <div id="card-consumables-total" class="metric">—</div>
+                        <div class="sub">Available: <span id="card-consumables-available">—</span> • Low stock: <span id="card-consumables-low">—</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Accessories -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <a href="{{ url_for('accessories') }}"><div class="icon-bubble"><i class="fa fa-headphones"></i></div></a>
+                    <div class="ms-3 text-end">
+                        <div class="label">Accessories</div>
+                        <div id="card-accessories-total" class="metric">—</div>
+                        <div class="sub">Available: <span id="card-accessories-available">—</span> • Checked: <span id="card-accessories-checked">—</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Firewall Address (summary) -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                    <a href="{{ url_for('firewall_address') }}"><div class="icon-bubble"><i class="fa fa-shield-alt"></i></div></a>
+                    <div class="ms-3 text-end">
+                        <div class="label">Firewall Address</div>
+                        <div class="metric">{{ ns.allowed + ns.blocked }}</div>
+                        <div class="sub">Allowed: <span id="card-firewall-allowed">{{ ns.allowed }}</span> • Blocked: <span id="card-firewall-blocked">{{ ns.blocked }}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts: Doughnut ARP Device & Firewall Address List -->
+    <div class="row g-3 mb-3">
+        <div class="col-sm-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="mb-0">ARP Device</h6>
+                        <a href="{{ url_for('index') }}" class="text-primary">Lihat Semua</a>
+                    </div>
+                    <div class="chart-wrap"><canvas id="chart-arp"></canvas></div>
+                    <div class="mt-2 small text-muted">Enabled: {{ arp_enabled }} • Disabled: {{ arp_disabled }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="mb-0">Firewall Address List</h6>
+                        <a href="{{ url_for('firewall_address') }}" class="text-primary">Lihat Semua</a>
+                    </div>
+                    <div class="chart-wrap"><canvas id="chart-firewall"></canvas></div>
+                    <div class="mt-2 small text-muted">Allowed: {{ ns.allowed }} • Blocked: {{ ns.blocked }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Table (placeholder) -->
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="mb-0">History Disable Enable Device</h6>
+                        <a href="#" class="text-primary">Show All</a>
+                    </div>
+                    <div class="table-responsive">
+                        <form action="{{ url_for('clear_history') }}" method="POST">
+                        <button type="submit" class="btn btn-warning mb-3">Bersihkan Semua</button>
+                        </form>
+
+                        <table class="table table-striped table-bordered align-middle mb-0">
+                            <thead>
+                            <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>IP</th>
+                            <th>Action</th>
+                            <th>Tanggal</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in histories %}
+                            <tr>
+                            <td>{{ h.id }}</td>
+                            <td>{{ h.user }}</td>
+                            <td>{{ h.ip }}</td>
+                            <td>{{ h.action }}</td>
+                            <td>{{ h.date }}</td>
+                            {% if h.status == 'ALLOWED' %}
+                                <td><span class="badge bg-success">{{ h.status }}</span></td>
+                            {% else %}
+                                <td><span class="badge bg-secondary">{{ h.status }}</span></td>
+                            {% endif %}
+                            <td>
+                                <form action="{{ url_for('delete_history', history_id=h.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                </form>
+                            </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart.js + data aggregation for cards -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function() {
+    const arpEnabled = {{ arp_enabled | int }};
+    const arpDisabled = {{ arp_disabled | int }};
+    const fwAllowed = {{ ns.allowed | int }};
+    const fwBlocked = {{ ns.blocked | int }};
+
+    // theme colors from base.html
+    const colorPrimary = '#2a5298';
+    const colorPrimaryLight = '#a3bffa';
+    const colorAccent = '#ffd43b';
+
+    // Doughnut: ARP (Enabled vs Disabled) with medium size
+    const ctxArp = document.getElementById('chart-arp');
+    if (ctxArp) {
+        new Chart(ctxArp, {
+            type: 'doughnut',
+            data: {
+                labels: ['Enabled', 'Disabled'],
+                datasets: [{
+                    data: [arpEnabled, arpDisabled],
+                    backgroundColor: [colorPrimary, colorPrimaryLight],
+                    hoverBackgroundColor: [colorPrimary, '#cbd5f7'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // Doughnut: Firewall (Allowed vs Blocked)
+    const ctxFw = document.getElementById('chart-firewall');
+    if (ctxFw) {
+        new Chart(ctxFw, {
+            type: 'doughnut',
+            data: {
+                labels: ['Allowed', 'Blocked'],
+                datasets: [{
+                    data: [fwAllowed, fwBlocked],
+                    backgroundColor: [colorPrimary, colorAccent],
+                    hoverBackgroundColor: [colorPrimary, '#ffdf73'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '62%',
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // Helper parse int
+    const toInt = (txt) => {
+        if (!txt) return 0;
+        const n = parseInt(String(txt).replace(/[^\d-]/g, ''), 10);
+        return isNaN(n) ? 0 : n;
+    };
+
+    // Load Accessories summary by fetching the page and parsing table
+    async function loadAccessories() {
+        try {
+            const res = await fetch('{{ url_for('accessories') }}', { credentials: 'same-origin' });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const rows = doc.querySelectorAll('#myTable tbody tr');
+            let totalTypes = 0, sumAvail = 0, sumChecked = 0;
+            rows.forEach((tr) => {
+                const tds = tr.querySelectorAll('td');
+                if (tds.length >= 9) {
+                    totalTypes += 1;
+                    sumAvail += toInt(tds[8].textContent);
+                    sumChecked += toInt(tds[7].textContent);
+                }
+            });
+            const elTotal = document.getElementById('card-accessories-total');
+            const elAvail = document.getElementById('card-accessories-available');
+            const elChecked = document.getElementById('card-accessories-checked');
+            if (elTotal) elTotal.textContent = totalTypes + ' types';
+            if (elAvail) elAvail.textContent = sumAvail;
+            if (elChecked) elChecked.textContent = sumChecked;
+        } catch (e) {
+            console.warn('Gagal muat accessories:', e);
+        }
+    }
+
+    // Load Consumables summary + low stock count
+    async function loadConsumables() {
+        try {
+            const res = await fetch('{{ url_for('consumables') }}', { credentials: 'same-origin' });
+            const html = await res.text();
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const rows = doc.querySelectorAll('#consumablesTable tbody tr');
+            let totalTypes = 0, sumAvail = 0, lowStock = 0;
+            rows.forEach((tr) => {
+                const tds = tr.querySelectorAll('td');
+                if (tds.length >= 9) {
+                    totalTypes += 1;
+                    const available = toInt(tds[7].textContent);
+                    sumAvail += available;
+                    // min qty badge may be "-" or number wrapped in a badge; detect via text
+                    const minQtyTxt = tds[8].textContent.trim();
+                    const minQty = toInt(minQtyTxt);
+                    if (minQty && available <= minQty) lowStock += 1;
+                }
+            });
+            const elTotal = document.getElementById('card-consumables-total');
+            const elAvail = document.getElementById('card-consumables-available');
+            const elLow = document.getElementById('card-consumables-low');
+            if (elTotal) elTotal.textContent = totalTypes + ' types';
+            if (elAvail) elAvail.textContent = sumAvail;
+            if (elLow) elLow.textContent = lowStock;
+        } catch (e) {
+            console.warn('Gagal muat consumables:', e);
+        }
+    }
+
+    // Users card (placeholder). If an API exists later, fetch and fill here.
+    const elUsers = document.getElementById('card-users');
+    if (elUsers) elUsers.textContent = '—';
+
+    // Kick off async loads
+    loadAccessories();
+    loadConsumables();
+})();
+</script>
+
+{% endblock %}
