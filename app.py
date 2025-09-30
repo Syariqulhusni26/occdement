@@ -473,10 +473,14 @@ def home():
     arp_devices = []
     address_list = []
     api = get_mikrotik_api()
-    
     db = get_db()
     cur = db.execute("SELECT * FROM history ORDER BY date DESC")
     histories = cur.fetchall()
+    
+    # mengambil jumlah user
+    cur = db.execute("SELECT COUNT(*) AS cnt FROM users")
+    row = cur.fetchone()
+    user_count = row['cnt'] if row else 0
 
     if api:
         try:
@@ -533,6 +537,7 @@ def home():
         schedules=schedules,
         address_list=address_list,
         histories=histories,
+        user_count=user_count,
         title="Dashboard"
     )
 
@@ -612,21 +617,25 @@ def firewall_address():
 @app.route('/consumables')
 @login_required
 def consumables():
-    headers = {
-        "Authorization": f"Bearer {SNIPEIT_TOKEN}",
-        "Accept": "application/json"
-    }
     try:
-        response = requests.get(f"{SNIPEIT_URL}/consumables", headers=headers)
-        if response.status_code == 200:
-            data = response.json().get("rows", [])
-            return render_template("consumables.html", consumables=data, title="Consumables")
+        url, headers = get_snipeit_headers()
+    except Exception:
+        flash("Silakan login ke Snipe-IT dulu", "warning")
+        return redirect(url_for("snipeit_login"))
+
+    try:
+        resp = requests.get(f"{url}/consumables", headers=headers)
+        consumables = resp.json().get("rows", []) if resp.status_code == 200 else []
+
+        if resp.status_code == 200:
+            return render_template("consumables.html", consumables=consumables, title="Consumables")
         else:
-            flash(f"Gagal mengambil data Consumables (status {response.status_code})", "danger")
+            flash(f"Gagal mengambil data Consumables (status {resp.status_code})", "danger")
             return render_template("consumables.html", consumables=[], title="Consumables")
     except Exception as e:
-        flash(f"Error koneksi ke SnipeIT: {e}", "danger")
+        flash(f"Error koneksi ke Snipe-IT: {e}", "danger")
         return render_template("consumables.html", consumables=[], title="Consumables")
+
 
 # helper: ambil id fleksibel dari entry routeros
 def extract_id(entry: dict):

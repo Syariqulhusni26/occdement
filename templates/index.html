@@ -45,7 +45,7 @@
                     <a href="{{ url_for('users_page') }}"><div class="icon-bubble"><i class="fa fa-users"></i></div></a>
                     <div class="ms-3 text-end">
                         <div class="label">Users</div>
-                        <div id="card-users" class="metric">—</div>
+                        <div id="card-users" class="metric">{{user_count}}</div>
                         {% if session.get('username') %}
                             <div class="sub">Login: {{ session.username }}</div>
                         {% endif %}
@@ -304,10 +304,6 @@
             console.warn('Gagal muat consumables:', e);
         }
     }
-
-    // Users card (placeholder). If an API exists later, fetch and fill here.
-    const elUsers = document.getElementById('card-users');
-    if (elUsers) elUsers.textContent = '—';
 
     // Kick off async loads
     loadAccessories();

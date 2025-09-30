@@ -220,9 +220,8 @@ Progres Project Sistem
 2. Menu User sudah bisa digunakan V
 3. Tinggal buat login mikrotik dan menambahkan menu login mikrotik dari dalam sistem V
 4. Tinggal menyelesaikan history device enable disable dab kayaknya buat file log untuk itu V
-5  tinggal membuat data user yang belum di update di halaman home X
-6. Tinggal integrasi ke LocalTunnnel X
+5  tinggal membuat data user yang belum di update di halaman home V
 
-26/09/25
-1. 
+30/09/25
+1. Sudah dibuat halaman login snipeit dan masih dalam percobaan V
 
