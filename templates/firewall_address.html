@@ -14,68 +14,88 @@
 <!-- ==================== ADDRESS LIST ==================== -->
 <h2>Firewall Address List</h2>
 
-<form action="{{ url_for('address_list_add') }}" method="POST" class="row g-3 mb-3">
-    <div class="col-md-3">
-        <label class="form-label">IP Address</label>
-        <input type="text" name="ip" class="form-control" placeholder="192.168.1.x" required>
-    </div>
-    <div class="col-md-3">
-        <label class="form-label">Kategori</label>
-        <select name="category" class="form-select">
-            <option value="ALLOWED">ALLOWED</option>
-            <option value="BLOCKED">BLOCKED</option>
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label class="form-label">Comment</label>
-        <input type="text" name="comment" class="form-control" placeholder="Keterangan (opsional)">
-    </div>
-    <div class="col-md-3 d-flex align-items-end">
-        <button type="submit" class="btn btn-primary w-100">Tambah IP</button>
-    </div>
-</form>
+<!-- Tombol buka modal -->
+<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addIpModal">
+    Tambah IP
+    </button>
 
-<table class="table table-bordered table-striped align-middle">
+    <!-- Modal Tambah IP -->
+    <div class="modal fade" id="addIpModal" tabindex="-1" aria-labelledby="addIpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <form action="{{ url_for('address_list_add') }}" method="POST">
+            <div class="modal-header">
+            <h5 class="modal-title" id="addIpModalLabel">Tambah IP Address</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body row g-3">
+            <div class="col-md-12">
+                <label class="form-label">IP Address</label>
+                <input type="text" name="ip" class="form-control" placeholder="192.168.1.x" required>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label">Kategori</label>
+                <select name="category" class="form-select">
+                <option value="ALLOWED">ALLOWED</option>
+                <option value="BLOCKED">BLOCKED</option>
+                </select>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label">Comment</label>
+                <input type="text" name="comment" class="form-control" placeholder="Keterangan (opsional)">
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
+        </form>
+        </div>
+    </div>
+    </div>
+
+    <!-- Tabel Address List -->
+    <table class="table table-bordered table-striped align-middle">
     <thead class="table-primary">
         <tr>
-            <th>IP</th>
-            <th>List</th>
-            <th>Comment</th>
-            <th>Aksi</th>
+        <th>IP</th>
+        <th>List</th>
+        <th>Comment</th>
+        <th>Aksi</th>
         </tr>
     </thead>
     <tbody>
-    {% for entry in address_list %}
+        {% for entry in address_list %}
         <tr>
-            
             <td>{{ entry.address }}</td>
             <td>{{ entry.list }}</td>
             <td>{{ entry.comment }}</td>
             <td>
-                <form method="POST" action="{{ url_for('toggle_address_fallback') }}" style="display:inline;">
-                    <input type="hidden" name="entry_id" value="{{ entry.id or '' }}">
-                    <input type="hidden" name="address" value="{{ entry.address }}">
-                    <input type="hidden" name="list" value="{{ entry.list }}">
-                    <button type="submit" 
-                            class="btn {% if entry.list == 'BLOCKED' %}btn-success{% else %}btn-secondary{% endif %}">
-                        {% if entry.list == 'BLOCKED' %} Enable {% else %} Disable {% endif %}
-                    </button>
-                </form>
+            <form method="POST" action="{{ url_for('toggle_address_fallback') }}" style="display:inline;">
+                <input type="hidden" name="entry_id" value="{{ entry.id or '' }}">
+                <input type="hidden" name="address" value="{{ entry.address }}">
+                <input type="hidden" name="list" value="{{ entry.list }}">
+                <button type="submit" 
+                        class="btn {% if entry.list == 'BLOCKED' %}btn-success{% else %}btn-secondary{% endif %}">
+                {% if entry.list == 'BLOCKED' %} Enable {% else %} Disable {% endif %}
+                </button>
+            </form>
 
-                <form action="{{ url_for('delete_address_fallback') }}" method="post" style="display:inline;">
+            <form action="{{ url_for('delete_address_fallback') }}" method="post" style="display:inline;">
                 <input type="hidden" name="entry_id" value="{{ entry['id'] }}">
                 <input type="hidden" name="address" value="{{ entry['address'] }}">
                 <input type="hidden" name="list" value="{{ entry['list'] }}">
                 <button type="submit" class="btn btn-danger"
-                    onclick="return confirm('Yakin mau hapus {{ entry['address'] }}?');">
-                    Delete
+                onclick="return confirm('Yakin mau hapus {{ entry['address'] }}?');">
+                Delete
                 </button>
             </form>
             </td>
         </tr>
-    {% endfor %}
+        {% endfor %}
     </tbody>
 </table>
+
 
 {% if address_list|length == 0 %}
 <div class="alert alert-info">Belum ada data di Address List.</div>

@@ -221,6 +221,7 @@ Progres Project Sistem
 3. Tinggal buat login mikrotik dan menambahkan menu login mikrotik dari dalam sistem V
 4. Tinggal menyelesaikan history device enable disable dab kayaknya buat file log untuk itu V
 5  tinggal membuat data user yang belum di update di halaman home V
+6. Sudah bisa di hosting pakai ngrok, walaupun tidak bisa login snipeit di tempat lain V
 
 30/09/25
 1. Sudah dibuat halaman login snipeit dan masih dalam percobaan V
